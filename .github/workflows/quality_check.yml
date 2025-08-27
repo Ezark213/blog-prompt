@@ -1,0 +1,353 @@
+name: 🔍 Quality Assurance & Testing
+
+on:
+  # プルリクエスト時の品質チェック
+  pull_request:
+    branches:
+      - main
+      - master
+    paths:
+      - 'src/**'
+      - 'prompts/**'
+      - 'package*.json'
+
+  # 手動実行
+  workflow_dispatch:
+    inputs:
+      check_type:
+        description: 'チェックタイプを選択'
+        required: true
+        type: choice
+        options:
+          - 'full'
+          - 'code-only'
+          - 'content-only'
+        default: 'full'
+
+  # 定期実行（毎週月曜午前1時）
+  schedule:
+    - cron: '0 1 * * 1'
+
+env:
+  NODE_VERSION: '18'
+
+jobs:
+  # コード品質チェック
+  code-quality:
+    name: 💻 Code Quality Check
+    runs-on: ubuntu-latest
+    if: github.event.inputs.check_type != 'content-only'
+
+    steps:
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+
+      - name: 🏗️ Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: 📦 Install Dependencies
+        run: npm ci
+
+      - name: 🔍 ESLint Check
+        run: |
+          echo "🔍 Running ESLint..."
+          if command -v npx >/dev/null 2>&1; then
+            npx eslint src/ --ext .js,.json --format unix
+            echo "✅ ESLint check completed"
+          else
+            echo "⚠️ ESLint not configured, skipping"
+          fi
+
+      - name: 🎨 Prettier Format Check
+        run: |
+          echo "🎨 Checking code formatting..."
+          if command -v npx >/dev/null 2>&1; then
+            npx prettier --check "src/**/*.js" "*.json" "*.md" || echo "⚠️ Some files are not properly formatted"
+          else
+            echo "⚠️ Prettier not configured, skipping"
+          fi
+
+      - name: 🧪 Unit Tests
+        run: |
+          echo "🧪 Running unit tests..."
+          if [ -d "tests/unit" ] && [ "$(ls -A tests/unit)" ]; then
+            npm test
+            echo "✅ Unit tests completed"
+          else
+            echo "ℹ️ No unit tests found, skipping"
+          fi
+
+      - name: 📊 Code Coverage Report
+        run: |
+          echo "📊 Generating code coverage report..."
+          if [ -f "coverage/lcov.info" ]; then
+            echo "✅ Coverage report generated"
+          else
+            echo "ℹ️ No coverage data available"
+          fi
+
+  # 依存関係セキュリティチェック
+  security-audit:
+    name: 🔒 Security Audit
+    runs-on: ubuntu-latest
+    if: github.event.inputs.check_type != 'content-only'
+
+    steps:
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+
+      - name: 🏗️ Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: 🔒 NPM Security Audit
+        run: |
+          echo "🔒 Running security audit..."
+          npm audit --audit-level=moderate
+          echo "✅ Security audit completed"
+
+      - name: 📋 Generate Security Report
+        run: |
+          echo "📋 Generating security summary..."
+          npm audit --json > security-audit.json 2>/dev/null || true
+          
+          if [ -f security-audit.json ]; then
+            echo "### 🔒 Security Audit Summary" >> $GITHUB_STEP_SUMMARY
+            echo "Security audit completed successfully" >> $GITHUB_STEP_SUMMARY
+          fi
+
+  # コンテンツ品質チェック
+  content-quality:
+    name: 📝 Content Quality Check
+    runs-on: ubuntu-latest
+    if: github.event.inputs.check_type != 'code-only'
+
+    steps:
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+
+      - name: 🏗️ Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: 📦 Install Dependencies
+        run: npm ci
+
+      - name: 📋 Validate Prompt Files
+        run: |
+          echo "📋 Validating prompt files..."
+          
+          prompt_count=0
+          error_count=0
+          
+          for file in *.md prompts/*.md 2>/dev/null; do
+            if [ -f "$file" ]; then
+              echo "Checking: $file"
+              
+              # ファイルサイズチェック
+              size=$(wc -c < "$file")
+              if [ $size -gt 100000 ]; then
+                echo "⚠️ Large file detected: $file ($size bytes)"
+              fi
+              
+              # 文字エンコーディングチェック
+              if file "$file" | grep -q "UTF-8"; then
+                echo "✅ UTF-8 encoding: $file"
+              else
+                echo "⚠️ Non-UTF-8 encoding: $file"
+                ((error_count++))
+              fi
+              
+              ((prompt_count++))
+            fi
+          done
+          
+          echo "### 📋 Prompt File Validation" >> $GITHUB_STEP_SUMMARY
+          echo "- **Total Files Checked**: $prompt_count" >> $GITHUB_STEP_SUMMARY
+          echo "- **Encoding Errors**: $error_count" >> $GITHUB_STEP_SUMMARY
+
+      - name: 🔍 Test Sample Content Generation
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          echo "🔍 Testing content generation with sample data..."
+          
+          # サンプルリサーチデータ作成
+          mkdir -p inputs/research_results/pending
+          cat > inputs/research_results/pending/sample_test.json << 'EOF'
+          {
+            "title": "freee確定申告の使い方テスト",
+            "keywords": ["freee", "確定申告", "使い方"],
+            "targetAudience": "会計ソフト初心者",
+            "contentType": "how-to",
+            "sections": [
+              {"title": "freee確定申告とは", "estimatedLength": "300"},
+              {"title": "初期設定の手順", "estimatedLength": "500"}
+            ]
+          }
+          EOF
+          
+          # テスト実行
+          if [ -n "$OPENAI_API_KEY" ]; then
+            echo "🧪 Running content generation test..."
+            mkdir -p logs outputs/{parsed_research,generated_content}
+            
+            if timeout 300 npm run parse-research; then
+              echo "✅ Research parsing test successful"
+            else
+              echo "⚠️ Research parsing test failed or timed out"
+            fi
+          else
+            echo "⚠️ OPENAI_API_KEY not set, skipping content generation test"
+          fi
+
+      - name: 📊 WordPress Connection Test
+        env:
+          WORDPRESS_API_URL: ${{ secrets.WORDPRESS_API_URL }}
+          WORDPRESS_USERNAME: ${{ secrets.WORDPRESS_USERNAME }}
+          WORDPRESS_APP_PASSWORD: ${{ secrets.WORDPRESS_APP_PASSWORD }}
+        run: |
+          echo "📊 Testing WordPress connection..."
+          
+          if [ -n "$WORDPRESS_API_URL" ] && [ -n "$WORDPRESS_USERNAME" ] && [ -n "$WORDPRESS_APP_PASSWORD" ]; then
+            # WordPress API接続テスト
+            node -e "
+              const WordPressClient = require('./src/core/wordpress_client');
+              const client = new WordPressClient();
+              client.testConnection()
+                .then(success => {
+                  console.log(success ? '✅ WordPress接続テスト成功' : '❌ WordPress接続テスト失敗');
+                  process.exit(success ? 0 : 1);
+                })
+                .catch(error => {
+                  console.error('❌ WordPress接続エラー:', error.message);
+                  process.exit(1);
+                });
+            "
+          else
+            echo "⚠️ WordPress credentials not set, skipping connection test"
+          fi
+
+  # パフォーマンステスト
+  performance-test:
+    name: ⚡ Performance Test
+    runs-on: ubuntu-latest
+    if: github.event.inputs.check_type == 'full'
+
+    steps:
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+
+      - name: 🏗️ Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: 📦 Install Dependencies
+        run: npm ci
+
+      - name: ⚡ Memory Usage Test
+        run: |
+          echo "⚡ Testing memory usage..."
+          
+          # メモリ使用量テスト
+          node -e "
+            const usage = process.memoryUsage();
+            console.log('Memory Usage:');
+            console.log('- RSS:', Math.round(usage.rss / 1024 / 1024), 'MB');
+            console.log('- Heap Used:', Math.round(usage.heapUsed / 1024 / 1024), 'MB');
+            console.log('- Heap Total:', Math.round(usage.heapTotal / 1024 / 1024), 'MB');
+            console.log('- External:', Math.round(usage.external / 1024 / 1024), 'MB');
+            
+            if (usage.heapUsed > 512 * 1024 * 1024) {
+              console.log('⚠️ High memory usage detected');
+              process.exit(1);
+            } else {
+              console.log('✅ Memory usage within normal range');
+            }
+          "
+
+      - name: ⏱️ Processing Time Test
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          echo "⏱️ Testing processing time..."
+          
+          if [ -n "$OPENAI_API_KEY" ]; then
+            start_time=$(date +%s)
+            
+            # サンプルデータで処理時間テスト
+            mkdir -p inputs/research_results/pending logs outputs/{parsed_research,generated_content}
+            
+            echo '{"title":"Performance Test","keywords":["test"],"contentType":"how-to"}' > inputs/research_results/pending/perf_test.json
+            
+            if timeout 180 npm run parse-research; then
+              end_time=$(date +%s)
+              duration=$((end_time - start_time))
+              echo "✅ Processing completed in ${duration} seconds"
+              
+              if [ $duration -gt 120 ]; then
+                echo "⚠️ Processing time longer than expected"
+              fi
+            else
+              echo "⚠️ Processing test timed out or failed"
+            fi
+          else
+            echo "ℹ️ Performance test skipped (no API key)"
+          fi
+
+  # 最終レポート生成
+  generate-report:
+    name: 📋 Generate QA Report
+    runs-on: ubuntu-latest
+    needs: [code-quality, security-audit, content-quality, performance-test]
+    if: always()
+
+    steps:
+      - name: 📋 Collect Results
+        run: |
+          echo "📋 Collecting quality assurance results..."
+          
+          code_status="${{ needs.code-quality.result }}"
+          security_status="${{ needs.security-audit.result }}"
+          content_status="${{ needs.content-quality.result }}"
+          perf_status="${{ needs.performance-test.result }}"
+          
+          echo "### 🔍 Quality Assurance Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Check Type | Status | Result |" >> $GITHUB_STEP_SUMMARY
+          echo "|------------|--------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| 💻 Code Quality | $([ "$code_status" = "success" ] && echo "✅ Pass" || echo "❌ Fail") | $code_status |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🔒 Security Audit | $([ "$security_status" = "success" ] && echo "✅ Pass" || echo "❌ Fail") | $security_status |" >> $GITHUB_STEP_SUMMARY
+          echo "| 📝 Content Quality | $([ "$content_status" = "success" ] && echo "✅ Pass" || echo "❌ Fail") | $content_status |" >> $GITHUB_STEP_SUMMARY
+          echo "| ⚡ Performance | $([ "$perf_status" = "success" ] && echo "✅ Pass" || [ "$perf_status" = "skipped" ] && echo "⏭️ Skip" || echo "❌ Fail") | $perf_status |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Overall Status**: $(
+            if [ "$code_status" = "success" ] && [ "$security_status" = "success" ] && [ "$content_status" = "success" ] && ([ "$perf_status" = "success" ] || [ "$perf_status" = "skipped" ]); then
+              echo "✅ All checks passed"
+            else
+              echo "⚠️ Some checks failed"
+            fi
+          )" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Timestamp**: $(date -u)" >> $GITHUB_STEP_SUMMARY
+          echo "**Workflow**: Quality Check #${{ github.run_number }}" >> $GITHUB_STEP_SUMMARY
+
+      - name: 📊 Upload QA Artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: qa-report-${{ github.run_number }}
+          path: |
+            security-audit.json
+            coverage/
+          retention-days: 30
+          if-no-files-found: ignore

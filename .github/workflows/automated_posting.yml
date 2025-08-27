@@ -1,0 +1,299 @@
+name: 🤖 Automated Blog Posting System
+
+on:
+  # 手動実行
+  workflow_dispatch:
+    inputs:
+      research_file:
+        description: 'リサーチファイル名 (optional)'
+        required: false
+        type: string
+      dry_run:
+        description: 'テスト実行（実際には投稿しない）'
+        required: false
+        type: boolean
+        default: false
+
+  # Pushトリガー
+  push:
+    paths:
+      - 'inputs/research_results/pending/*.json'
+      - 'inputs/research_results/pending/*.md'
+    branches:
+      - main
+      - master
+
+  # スケジュール実行（毎日午前2時）
+  schedule:
+    - cron: '0 2 * * *'
+
+env:
+  NODE_VERSION: '18'
+  TIMEZONE: 'Asia/Tokyo'
+
+jobs:
+  # 環境チェック
+  check-environment:
+    name: 🔍 Environment Check
+    runs-on: ubuntu-latest
+    outputs:
+      has-pending-files: ${{ steps.check-files.outputs.has-files }}
+      pending-count: ${{ steps.check-files.outputs.count }}
+    
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Check Pending Research Files
+        id: check-files
+        run: |
+          if [ -d "inputs/research_results/pending" ]; then
+            file_count=$(find inputs/research_results/pending -name "*.json" -o -name "*.md" | wc -l)
+            if [ $file_count -gt 0 ]; then
+              echo "has-files=true" >> $GITHUB_OUTPUT
+              echo "count=$file_count" >> $GITHUB_OUTPUT
+              echo "✅ 処理対象ファイル: $file_count 個"
+            else
+              echo "has-files=false" >> $GITHUB_OUTPUT
+              echo "count=0" >> $GITHUB_OUTPUT
+              echo "ℹ️ 処理対象ファイルなし"
+            fi
+          else
+            echo "has-files=false" >> $GITHUB_OUTPUT
+            echo "count=0" >> $GITHUB_OUTPUT
+            echo "⚠️ pending ディレクトリが存在しません"
+          fi
+
+      - name: Environment Summary
+        run: |
+          echo "### 🌍 Environment Check Summary" >> $GITHUB_STEP_SUMMARY
+          echo "- **Pending Files**: ${{ steps.check-files.outputs.count }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Processing Required**: ${{ steps.check-files.outputs.has-files }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Trigger**: ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
+
+  # メイン処理
+  generate-and-publish:
+    name: 🚀 Generate & Publish Articles
+    runs-on: ubuntu-latest
+    needs: check-environment
+    if: needs.check-environment.outputs.has-pending-files == 'true' || github.event.inputs.research_file != ''
+    
+    strategy:
+      matrix:
+        node-version: [18]
+      fail-fast: false
+
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: 🏗️ Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+      - name: 📦 Install Dependencies
+        run: |
+          npm ci
+          echo "✅ Dependencies installed successfully"
+
+      - name: 🔧 Create Required Directories
+        run: |
+          mkdir -p logs
+          mkdir -p outputs/{parsed_research,generated_content,published_posts}
+          mkdir -p inputs/research_results/{pending,completed}
+          echo "✅ Directory structure created"
+
+      - name: 🔍 Parse GPT Research Results
+        id: parse-research
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          echo "🔍 Starting research parsing..."
+          if npm run parse-research; then
+            echo "parse-success=true" >> $GITHUB_OUTPUT
+            echo "✅ Research parsing completed"
+          else
+            echo "parse-success=false" >> $GITHUB_OUTPUT
+            echo "❌ Research parsing failed"
+            exit 1
+          fi
+
+      - name: 📝 Generate Article Content
+        id: generate-content
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          echo "📝 Starting content generation..."
+          if npm run generate-content; then
+            echo "content-success=true" >> $GITHUB_OUTPUT
+            echo "✅ Content generation completed"
+          else
+            echo "content-success=false" >> $GITHUB_OUTPUT
+            echo "❌ Content generation failed"
+            exit 1
+          fi
+
+      - name: 📊 Generate Charts and Visual Elements
+        id: generate-charts
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          echo "📊 Starting chart generation..."
+          if npm run generate-charts; then
+            echo "charts-success=true" >> $GITHUB_OUTPUT
+            echo "✅ Chart generation completed"
+          else
+            echo "charts-success=false" >> $GITHUB_OUTPUT
+            echo "⚠️ Chart generation failed, continuing without charts"
+          fi
+
+      - name: 🔍 Content Quality Check
+        id: quality-check
+        run: |
+          echo "🔍 Running content quality checks..."
+          
+          # 生成されたコンテンツの確認
+          content_files=$(find outputs/generated_content -name "*_content.json" | wc -l)
+          echo "Generated content files: $content_files"
+          
+          if [ $content_files -gt 0 ]; then
+            echo "✅ Quality check passed"
+            echo "quality-passed=true" >> $GITHUB_OUTPUT
+          else
+            echo "❌ No content files generated"
+            echo "quality-passed=false" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+
+      - name: 📤 Publish to WordPress (Production)
+        id: publish-wordpress
+        if: github.event.inputs.dry_run != 'true'
+        env:
+          WORDPRESS_API_URL: ${{ secrets.WORDPRESS_API_URL }}
+          WORDPRESS_USERNAME: ${{ secrets.WORDPRESS_USERNAME }}
+          WORDPRESS_APP_PASSWORD: ${{ secrets.WORDPRESS_APP_PASSWORD }}
+          SITE_URL: ${{ secrets.SITE_URL }}
+        run: |
+          echo "📤 Publishing to WordPress..."
+          if npm run publish; then
+            echo "publish-success=true" >> $GITHUB_OUTPUT
+            echo "✅ WordPress publishing completed"
+          else
+            echo "publish-success=false" >> $GITHUB_OUTPUT
+            echo "❌ WordPress publishing failed"
+            exit 1
+          fi
+
+      - name: 📤 Dry Run - WordPress Publishing Simulation
+        id: dry-run-publish
+        if: github.event.inputs.dry_run == 'true'
+        run: |
+          echo "🧪 Dry run mode - WordPress publishing simulation"
+          echo "Would publish the following files:"
+          find outputs/generated_content -name "*_content.json" -exec basename {} \;
+          echo "dry-run-success=true" >> $GITHUB_OUTPUT
+
+      - name: 📁 Move Processed Files
+        run: |
+          echo "📁 Moving processed research files..."
+          if [ -d "inputs/research_results/pending" ] && [ "$(ls -A inputs/research_results/pending)" ]; then
+            mv inputs/research_results/pending/* inputs/research_results/completed/ 2>/dev/null || true
+            echo "✅ Files moved to completed directory"
+          else
+            echo "ℹ️ No files to move"
+          fi
+
+      - name: 📊 Generate Processing Summary
+        id: summary
+        run: |
+          echo "📊 Generating processing summary..."
+          
+          parsed_files=$(find outputs/parsed_research -name "*_structured.json" 2>/dev/null | wc -l)
+          content_files=$(find outputs/generated_content -name "*_content.json" 2>/dev/null | wc -l)
+          published_files=$(find outputs/published_posts -name "*_published.json" 2>/dev/null | wc -l)
+          
+          echo "### 🚀 Automation Processing Summary" >> $GITHUB_STEP_SUMMARY
+          echo "| Stage | Count | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|-------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| 📋 Research Parsed | $parsed_files | ✅ |" >> $GITHUB_STEP_SUMMARY
+          echo "| 📝 Content Generated | $content_files | ✅ |" >> $GITHUB_STEP_SUMMARY
+          echo "| 📤 Articles Published | $published_files | $( [ '${{ steps.publish-wordpress.outputs.publish-success }}' = 'true' ] && echo '✅' || echo '⚠️' ) |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Total Processing Time**: $(date -u -d @$SECONDS +%T)" >> $GITHUB_STEP_SUMMARY
+          
+          echo "summary-generated=true" >> $GITHUB_OUTPUT
+
+      - name: 🔄 Commit Results
+        if: steps.summary.outputs.summary-generated == 'true'
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add outputs/ inputs/research_results/completed/
+          
+          if git diff --staged --quiet; then
+            echo "ℹ️ No changes to commit"
+          else
+            git commit -m "🤖 Automated blog processing results
+
+          - Parsed research files: $(find outputs/parsed_research -name "*_structured.json" 2>/dev/null | wc -l)
+          - Generated content files: $(find outputs/generated_content -name "*_content.json" 2>/dev/null | wc -l)  
+          - Published articles: $(find outputs/published_posts -name "*_published.json" 2>/dev/null | wc -l)
+          
+          🤖 Generated with [Claude Code](https://claude.ai/code)
+          
+          Co-Authored-By: GitHub Actions <action@github.com>"
+            
+            git push
+            echo "✅ Results committed and pushed"
+          fi
+
+      - name: 📋 Upload Processing Logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: processing-logs-${{ github.run_number }}
+          path: |
+            logs/
+            outputs/
+          retention-days: 30
+
+  # 通知処理
+  notify-completion:
+    name: 📢 Notification
+    runs-on: ubuntu-latest
+    needs: [check-environment, generate-and-publish]
+    if: always()
+    
+    steps:
+      - name: 📊 Calculate Results
+        id: results
+        run: |
+          if [ "${{ needs.generate-and-publish.result }}" = "success" ]; then
+            echo "status=success" >> $GITHUB_OUTPUT
+            echo "message=✅ ブログ自動化処理が正常に完了しました" >> $GITHUB_OUTPUT
+          elif [ "${{ needs.generate-and-publish.result }}" = "failure" ]; then
+            echo "status=failure" >> $GITHUB_OUTPUT
+            echo "message=❌ ブログ自動化処理でエラーが発生しました" >> $GITHUB_OUTPUT
+          elif [ "${{ needs.check-environment.outputs.has-pending-files }}" = "false" ]; then
+            echo "status=skipped" >> $GITHUB_OUTPUT  
+            echo "message=ℹ️ 処理対象ファイルがないため、処理をスキップしました" >> $GITHUB_OUTPUT
+          else
+            echo "status=unknown" >> $GITHUB_OUTPUT
+            echo "message=⚠️ 不明な状態です" >> $GITHUB_OUTPUT
+          fi
+
+      - name: 📢 Create Summary
+        run: |
+          echo "### 🚀 Automated Blog Processing Complete" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "${{ steps.results.outputs.message }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Workflow Run**: [${{ github.run_number }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})" >> $GITHUB_STEP_SUMMARY
+          echo "**Triggered by**: ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Repository**: ${{ github.repository }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Timestamp**: $(date -u)" >> $GITHUB_STEP_SUMMARY

@@ -72,9 +72,9 @@ blog-automation/
 - **用途**: 記事連動視覚化コンテンツ
 - **特徴**: JavaScript不使用、CSS分離、UX最優先
 
-#### 3. SNS投稿 (`ブログ記事からのX投稿＆.md`)
-- **用途**: X投稿とSchema.org生成
-- **特徴**: 画像生成、文字数対応、構造化データ
+#### 3. Schema.org構造化データ (`schema_markup_generator.md`)
+- **用途**: SEO強化のための構造化データ自動生成
+- **特徴**: 記事解析、スキーマ判定、WordPress対応
 
 ## 🛠️ セットアップ
 

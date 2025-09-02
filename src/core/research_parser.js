@@ -26,7 +26,7 @@ class ResearchParser {
   }
 
   /**
-   * GPTディープリサーチ結果を解析・構造化
+   * GPTディープリサーチ結果を解析・構造化（複数記事対応）
    */
   async parseGPTResearch(researchFile) {
     try {
@@ -45,35 +45,47 @@ class ResearchParser {
         throw new Error('未対応のファイル形式です');
       }
 
-      // 必要な情報を抽出・構造化
-      const structuredData = await this.structureResearchData(parsedData);
-      
-      // キーワード抽出・最適化
-      const optimizedKeywords = await this.extractKeywords(structuredData);
-      
-      // 記事構成の構造化
-      const articleStructure = await this.structureArticle(structuredData);
-      
-      // メタデータ準備
-      const metaData = await this.prepareMetaData(structuredData);
+      // 複数記事の場合は配列で処理
+      const results = [];
+      const articles = parsedData.articles || [parsedData];
 
-      const result = {
-        sourceFile: researchFile,
-        keywords: optimizedKeywords,
-        structure: articleStructure,
-        competitorAnalysis: structuredData.competitors || [],
-        metaData: metaData,
-        seoStrategy: structuredData.seoStrategy || {},
-        targetAudience: structuredData.targetAudience || '会計ソフト初心者',
-        publishDate: new Date().toISOString(),
-        priority: structuredData.priority || 'medium'
-      };
+      for (let i = 0; i < articles.length; i++) {
+        const articleData = articles[i];
+        
+        // 必要な情報を抽出・構造化
+        const structuredData = await this.structureResearchData(articleData);
+        
+        // キーワード抽出・最適化
+        const optimizedKeywords = await this.extractKeywords(structuredData);
+        
+        // 記事構成の構造化
+        const articleStructure = await this.structureArticle(structuredData);
+        
+        // メタデータ準備
+        const metaData = await this.prepareMetaData(structuredData);
 
-      // 結果を保存
-      await this.saveStructuredData(result, researchFile);
+        const result = {
+          sourceFile: researchFile,
+          articleIndex: i + 1,
+          keywords: optimizedKeywords,
+          structure: articleStructure,
+          competitorAnalysis: structuredData.competitors || [],
+          metaData: metaData,
+          seoStrategy: structuredData.seoStrategy || {},
+          targetAudience: structuredData.targetAudience || '会計ソフト初心者',
+          publishDate: new Date().toISOString(),
+          priority: structuredData.priority || 'medium'
+        };
+
+        // 個別結果を保存
+        const outputFileName = `${researchFile.replace(/\.[^/.]+$/, '')}_article_${i + 1}_structured.json`;
+        await this.saveStructuredData(result, outputFileName);
+        
+        results.push(result);
+      }
       
-      logger.info(`リサーチファイル解析完了: ${researchFile}`);
-      return result;
+      logger.info(`リサーチファイル解析完了: ${researchFile} (${results.length}記事)`);
+      return results;
 
     } catch (error) {
       logger.error(`リサーチファイル解析エラー: ${error.message}`);
@@ -82,27 +94,36 @@ class ResearchParser {
   }
 
   /**
-   * Markdownリサーチファイルの解析
+   * Markdownリサーチファイルの解析（5つの記事候補対応）
    */
   async parseMarkdownResearch(content) {
     const tokens = marked.lexer(content);
-    const parsedData = {
-      title: '',
-      sections: [],
-      keywords: [],
-      competitors: [],
-      dataPoints: []
-    };
-
+    const articles = [];
+    let currentArticle = null;
     let currentSection = null;
 
     for (const token of tokens) {
       if (token.type === 'heading') {
-        if (token.depth === 1 && !parsedData.title) {
-          parsedData.title = token.text;
-        } else {
+        if (token.depth === 1) {
+          // 新しい記事候補の開始
+          if (currentArticle) {
+            if (currentSection) {
+              currentArticle.sections.push(currentSection);
+            }
+            articles.push(currentArticle);
+          }
+          currentArticle = {
+            title: token.text,
+            sections: [],
+            keywords: [],
+            competitors: [],
+            dataPoints: []
+          };
+          currentSection = null;
+        } else if (token.depth === 2 && currentArticle) {
+          // セクションの開始
           if (currentSection) {
-            parsedData.sections.push(currentSection);
+            currentArticle.sections.push(currentSection);
           }
           currentSection = {
             title: token.text,
@@ -110,34 +131,38 @@ class ResearchParser {
             content: []
           };
         }
-      } else if (currentSection) {
+      } else if (currentSection && currentArticle) {
         currentSection.content.push(token);
         
         // キーワードの自動抽出
         if (token.type === 'text' && token.text.includes('キーワード')) {
           const keywords = this.extractKeywordsFromText(token.text);
-          parsedData.keywords.push(...keywords);
+          currentArticle.keywords.push(...keywords);
         }
         
         // 競合情報の抽出
         if (token.type === 'text' && token.text.includes('競合')) {
           const competitors = this.extractCompetitorsFromText(token.text);
-          parsedData.competitors.push(...competitors);
+          currentArticle.competitors.push(...competitors);
         }
         
         // データポイントの抽出
         if (token.type === 'text' && /\d+/.test(token.text)) {
           const dataPoints = this.extractDataPointsFromText(token.text);
-          parsedData.dataPoints.push(...dataPoints);
+          currentArticle.dataPoints.push(...dataPoints);
         }
       }
     }
 
-    if (currentSection) {
-      parsedData.sections.push(currentSection);
+    // 最後の記事を追加
+    if (currentArticle) {
+      if (currentSection) {
+        currentArticle.sections.push(currentSection);
+      }
+      articles.push(currentArticle);
     }
 
-    return parsedData;
+    return { articles };
   }
 
   /**
@@ -293,12 +318,17 @@ class ResearchParser {
   async processAllPendingFiles() {
     try {
       const pendingFiles = await fs.readdir(this.pendingDir);
-      const results = [];
+      const allResults = [];
       
       for (const file of pendingFiles) {
         if (file.endsWith('.json') || file.endsWith('.md')) {
-          const result = await this.parseGPTResearch(file);
-          results.push(result);
+          const results = await this.parseGPTResearch(file);
+          // 複数記事の場合は配列、単一記事の場合は要素として追加
+          if (Array.isArray(results)) {
+            allResults.push(...results);
+          } else {
+            allResults.push(results);
+          }
           
           // 処理済みディレクトリに移動
           await fs.move(
@@ -308,8 +338,8 @@ class ResearchParser {
         }
       }
       
-      logger.info(`${results.length}個のリサーチファイルを処理しました`);
-      return results;
+      logger.info(`${allResults.length}個の記事を処理しました`);
+      return allResults;
       
     } catch (error) {
       logger.error(`バッチ処理エラー: ${error.message}`);

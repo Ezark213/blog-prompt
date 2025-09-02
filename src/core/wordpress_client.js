@@ -69,19 +69,19 @@ class WordPressClient {
         title: articleData.title
       });
       
-      const publishedPost = {
+      const draftPost = {
         ...articleData,
         wordpressId: post.id,
-        publishedUrl: post.link,
-        publishedAt: new Date().toISOString(),
-        status: 'published'
+        draftUrl: post.link,
+        savedAt: new Date().toISOString(),
+        status: 'draft'
       };
       
-      // 公開記録を保存
-      await this.savePublishedRecord(publishedPost);
+      // 下書き保存記録を保存
+      await this.saveDraftRecord(draftPost);
       
-      logger.info(`記事投稿完了: ${articleData.title} (ID: ${post.id})`);
-      return publishedPost;
+      logger.info(`記事下書き保存完了: ${articleData.title} (ID: ${post.id})`);
+      return draftPost;
 
     } catch (error) {
       logger.error(`記事投稿エラー: ${error.message}`);
@@ -98,7 +98,7 @@ class WordPressClient {
         title: postData.title,
         content: postData.content,
         slug: postData.slug,
-        status: 'publish', // 'draft' for drafts
+        status: 'draft', // Save as draft instead of publishing
         categories: postData.categories,
         tags: postData.tags,
         author: await this.getAuthorId('ゆーた'),
@@ -328,7 +328,21 @@ ${schemaJson}
   }
 
   /**
-   * 全生成記事の投稿
+   * 下書き保存記録
+   */
+  async saveDraftRecord(draftPost) {
+    await fs.ensureDir(this.outputDir);
+    const fileName = `${draftPost.sourceFile?.replace(/\.[^/.]+$/, '') || 'article'}_article_${draftPost.articleIndex || 1}_draft.json`;
+    const outputPath = path.join(this.outputDir, fileName);
+    
+    await fs.writeJson(outputPath, draftPost, { spaces: 2 });
+    logger.info(`下書き記録保存完了: ${outputPath}`);
+    
+    return outputPath;
+  }
+
+  /**
+   * 全生成記事の下書き保存
    */
   async publishAllGeneratedArticles() {
     try {
@@ -340,19 +354,19 @@ ${schemaJson}
           const filePath = path.join(this.inputDir, file);
           const articleData = await fs.readJson(filePath);
           
-          const publishedPost = await this.publishArticle(articleData);
-          results.push(publishedPost);
+          const draftPost = await this.publishArticle(articleData);
+          results.push(draftPost);
           
-          // 投稿間隔（API制限対策）
+          // API制限対策
           await this.delay(2000);
         }
       }
       
-      logger.info(`${results.length}個の記事を投稿しました`);
+      logger.info(`${results.length}個の記事を下書きとして保存しました`);
       return results;
       
     } catch (error) {
-      logger.error(`バッチ投稿エラー: ${error.message}`);
+      logger.error(`バッチ下書き保存エラー: ${error.message}`);
       throw error;
     }
   }

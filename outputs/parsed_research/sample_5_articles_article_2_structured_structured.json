@@ -1,0 +1,75 @@
+{
+  "sourceFile": "sample_5_articles.md",
+  "articleIndex": 2,
+  "keywords": {
+    "primary": "",
+    "secondary": [],
+    "longtail": [
+      " 初心者",
+      " 設定方法",
+      " おすすめ",
+      " 比較"
+    ],
+    "related": [
+      "会計ソフト",
+      "クラウド会計",
+      "確定申告",
+      "自動仕訳",
+      "freee",
+      "マネーフォワード",
+      "経理効率化",
+      "税務申告"
+    ]
+  },
+  "structure": {
+    "title": {
+      "recommended": "クラウド会計ソフト比較の使い方完全ガイド【初心者向け】",
+      "alternatives": [
+        "【2024年最新】クラウド会計ソフト比較徹底解説",
+        "クラウド会計ソフト比較でできること・設定方法まとめ",
+        "実務家が教えるクラウド会計ソフト比較活用法"
+      ]
+    },
+    "introduction": "この記事では、クラウド会計ソフト比較について実務家の視点から詳しく解説します。",
+    "sections": [
+      {
+        "title": "マネーフォワードの特徴",
+        "order": 1,
+        "estimatedLength": "500-800",
+        "includeChart": true
+      },
+      {
+        "title": "弥生会計の特徴",
+        "order": 2,
+        "estimatedLength": "500-800",
+        "includeChart": true
+      }
+    ],
+    "conclusion": "クラウド会計ソフト比較について解説しました。適切に活用して業務効率化を図りましょう。",
+    "faq": [
+      {
+        "question": "クラウド会計ソフト比較の設定方法は？",
+        "answer": "初期設定から順番に進めることで簡単に設定できます。"
+      }
+    ],
+    "cta": "クラウド会計ソフト比較でお困りの方は、ぜひお気軽にご相談ください。"
+  },
+  "competitorAnalysis": [],
+  "metaData": {
+    "title": "クラウド会計ソフト比較の使い方完全ガイド【初心者向け】",
+    "metaDescription": "クラウド会計ソフト比較の使い方を実務家が詳しく解説。初期設定から実践的な活用法まで、初心者にもわかりやすく説明します。",
+    "slug": "",
+    "categories": [
+      "税務・会計",
+      "クラウド会計"
+    ],
+    "tags": [],
+    "focusKeyword": "クラウド会計ソフト比較",
+    "author": "ゆーた",
+    "publishDate": "2025-08-31T01:21:28.146Z"
+  },
+  "seoStrategy": {},
+  "targetAudience": "会計ソフト初心者",
+  "publishDate": "2025-08-31T01:21:28.146Z",
+  "priority": "medium"
+}

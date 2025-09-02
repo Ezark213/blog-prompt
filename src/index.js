@@ -88,13 +88,13 @@ class BlogAutomationSystem {
       const articles = await this.contentGenerator.generateAllArticles();
       this.stats.generatedArticles = articles.length;
       
-      // ステップ3: WordPress投稿
+      // ステップ3: WordPress下書き保存
       if (!process.env.DRY_RUN || process.env.DRY_RUN === 'false') {
-        logger.info('📤 ステップ3: WordPress投稿');
-        const publishedPosts = await this.wordpressClient.publishAllGeneratedArticles();
-        this.stats.publishedArticles = publishedPosts.length;
+        logger.info('📤 ステップ3: WordPress下書き保存');
+        const draftPosts = await this.wordpressClient.publishAllGeneratedArticles();
+        this.stats.publishedArticles = draftPosts.length;
       } else {
-        logger.info('🧪 DRY_RUN モード - 実際の投稿はスキップ');
+        logger.info('🧪 DRY_RUN モード - 実際の保存はスキップ');
       }
       
       // 完了レポート生成
@@ -154,11 +154,11 @@ class BlogAutomationSystem {
   }
 
   /**
-   * WordPress投稿のみ実行
+   * WordPress下書き保存のみ実行
    */
   async publishToWordPress() {
     try {
-      logger.info('📤 WordPress投稿開始');
+      logger.info('📤 WordPress下書き保存開始');
       
       // 接続テスト
       const connected = await this.wordpressClient.testConnection();
@@ -169,12 +169,12 @@ class BlogAutomationSystem {
       const results = await this.wordpressClient.publishAllGeneratedArticles();
       this.stats.publishedArticles = results.length;
       
-      logger.info(`✅ WordPress投稿完了: ${results.length}個の記事`);
+      logger.info(`✅ WordPress下書き保存完了: ${results.length}個の記事`);
       return results;
       
     } catch (error) {
       this.stats.errors++;
-      logger.error(`❌ WordPress投稿エラー: ${error.message}`);
+      logger.error(`❌ WordPress下書き保存エラー: ${error.message}`);
       throw error;
     }
   }
@@ -262,7 +262,7 @@ class BlogAutomationSystem {
         success: this.stats.errors === 0,
         totalProcessed: this.stats.parsedFiles,
         totalGenerated: this.stats.generatedArticles,
-        totalPublished: this.stats.publishedArticles,
+        totalSavedAsDrafts: this.stats.publishedArticles,
         errors: this.stats.errors
       }
     };
@@ -290,7 +290,7 @@ class BlogAutomationSystem {
   full-automation    完全自動化パイプライン実行
   parse-research     リサーチファイル解析のみ
   generate-content   コンテンツ生成のみ  
-  publish           WordPress投稿のみ
+  publish           WordPress下書き保存のみ
   test-connection   WordPress接続テスト
   help              このヘルプを表示
 
@@ -303,7 +303,7 @@ class BlogAutomationSystem {
   npm start                    # 完全自動化実行
   npm run parse-research       # リサーチ解析のみ
   npm run generate-content     # コンテンツ生成のみ
-  npm run publish             # 投稿のみ
+  npm run publish             # 下書き保存のみ
   DRY_RUN=true npm start      # テストモード実行
 
 詳細: https://github.com/Ezark213/blog-prompt

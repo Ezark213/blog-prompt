@@ -18,7 +18,22 @@
 const fs = require('fs-extra');
 const path = require('path');
 const winston = require('winston');
+const os = require('os');
 require('dotenv').config();
+
+// 環境変数チェック関数を追加
+function checkEnvironment() {
+  const required = ['OPENAI_API_KEY', 'WORDPRESS_API_URL', 'WORDPRESS_USERNAME', 'WORDPRESS_APP_PASSWORD'];
+  
+  for (const env of required) {
+    if (!process.env[env]) {
+      console.error(`❌ 環境変数不足: ${env}`);
+      process.exit(1);
+    }
+  }
+  
+  console.log('✅ 環境変数チェック完了');
+}
 
 // コアモジュール
 const ResearchParser = require('./core/research_parser');
@@ -88,14 +103,10 @@ class BlogAutomationSystem {
       const articles = await this.contentGenerator.generateAllArticles();
       this.stats.generatedArticles = articles.length;
       
-      // ステップ3: WordPress下書き保存
-      if (!process.env.DRY_RUN || process.env.DRY_RUN === 'false') {
-        logger.info('📤 ステップ3: WordPress下書き保存');
-        const draftPosts = await this.wordpressClient.publishAllGeneratedArticles();
-        this.stats.publishedArticles = draftPosts.length;
-      } else {
-        logger.info('🧪 DRY_RUN モード - 実際の保存はスキップ');
-      }
+      // ステップ3: デスクトップ保存
+      logger.info('💾 ステップ3: デスクトップ保存');
+      const savedArticles = await this.saveArticlesToDesktop(articles);
+      this.stats.publishedArticles = savedArticles.length;
       
       // 完了レポート生成
       const report = await this.generateReport();
@@ -154,27 +165,22 @@ class BlogAutomationSystem {
   }
 
   /**
-   * WordPress下書き保存のみ実行
+   * デスクトップ保存のみ実行
    */
-  async publishToWordPress() {
+  async saveToDesktop() {
     try {
-      logger.info('📤 WordPress下書き保存開始');
+      logger.info('💾 デスクトップ保存開始');
       
-      // 接続テスト
-      const connected = await this.wordpressClient.testConnection();
-      if (!connected) {
-        throw new Error('WordPress接続に失敗しました');
-      }
-      
-      const results = await this.wordpressClient.publishAllGeneratedArticles();
+      const articles = await this.contentGenerator.generateAllArticles();
+      const results = await this.saveArticlesToDesktop(articles);
       this.stats.publishedArticles = results.length;
       
-      logger.info(`✅ WordPress下書き保存完了: ${results.length}個の記事`);
+      logger.info(`✅ デスクトップ保存完了: ${results.length}個の記事`);
       return results;
       
     } catch (error) {
       this.stats.errors++;
-      logger.error(`❌ WordPress下書き保存エラー: ${error.message}`);
+      logger.error(`❌ デスクトップ保存エラー: ${error.message}`);
       throw error;
     }
   }
@@ -315,6 +321,8 @@ class BlogAutomationSystem {
  * メイン実行部分
  */
 async function main() {
+  checkEnvironment();
+  
   const system = new BlogAutomationSystem();
   const command = process.argv[2] || 'full-automation';
 

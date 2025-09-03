@@ -417,4 +417,56 @@ if (require.main === module) {
     });
 }
 
-module.exports = ResearchParser;
+function parseResearch(researchContent) {
+  console.log('📋 ディープリサーチ解析中...');
+  
+  try {
+    // マークダウンからデータ抽出
+    const lines = researchContent.split('\n');
+    
+    // タイトル抽出
+    const titleMatch = researchContent.match(/対象キーワード:\s*(.+)/);
+    const title = titleMatch ? titleMatch[1] : 'デフォルトタイトル';
+    
+    // 文字数抽出
+    const wordCountMatch = researchContent.match(/想定文字数:\s*(\d+)/);
+    const targetWordCount = wordCountMatch ? parseInt(wordCountMatch[1]) : 5000;
+    
+    // キーワード抽出
+    const keywordMatch = researchContent.match(/対象キーワード:\s*(.+)/);
+    const mainKeyword = keywordMatch ? keywordMatch[1] : title;
+    
+    // 見出し構成抽出（簡易版）
+    const headings = [];
+    lines.forEach(line => {
+      if (line.startsWith('H2:') || line.startsWith('## ')) {
+        headings.push({
+          level: 2,
+          text: line.replace(/^(H2:|## )/, '').trim()
+        });
+      }
+    });
+    
+    const result = {
+      title: title,
+      mainKeyword: mainKeyword,
+      targetWordCount: targetWordCount,
+      headings: headings,
+      competitiveAdvantage: 'SEO最適化と実務経験重視',
+      detailLevel: 'professional',
+      keywords: [mainKeyword]
+    };
+    
+    console.log('✅ リサーチ解析完了');
+    console.log(`📝 タイトル: ${result.title}`);
+    console.log(`🎯 目標文字数: ${result.targetWordCount}`);
+    
+    return result;
+    
+  } catch (error) {
+    console.error('❌ リサーチ解析エラー:', error);
+    throw error;
+  }
+}
+
+module.exports = { parseResearch, ResearchParser };

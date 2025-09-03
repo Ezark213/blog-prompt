@@ -12,7 +12,14 @@
     "generate-content": "node src/core/content_generator.js",
     "generate-charts": "node src/core/image_generator.js",
     "publish": "node src/core/wordpress_client.js",
-    "full-automation": "npm run parse-research && npm run generate-content && npm run generate-charts && npm run publish"
+    "full-automation": "npm run parse-research && npm run generate-content && npm run generate-charts && npm run publish",
+    "claude": "node src/claude_article_generator.js",
+    "claude-help": "node src/claude_article_generator.js help",
+    "claude-list": "node src/claude_article_generator.js list",
+    "claude-sample": "node src/claude_article_generator.js sample",
+    "wordpress-post": "node src/wordpress_auto_post.js",
+    "multi-post": "node src/wordpress_auto_post.js",
+    "setup-wordpress": "echo 'WordPress自動投稿の設定方法：' && cat SETUP_WORDPRESS.md"
   },
   "keywords": [
     "wordpress",
@@ -27,7 +34,6 @@
   "dependencies": {
     "axios": "^1.5.0",
     "dotenv": "^16.3.1",
-    "openai": "^4.0.0",
     "cheerio": "^1.0.0-rc.12",
     "marked": "^9.0.0",
     "fs-extra": "^11.1.1",

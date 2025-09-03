@@ -1,114 +1,69 @@
-# 🤖 EZARK税務・会計 完全自動化システム
+# 手動リサーチ → Claude Code記事生成システム
 
-[![Automated Blog Posting](https://github.com/Ezark213/blog-prompt/actions/workflows/automated_posting.yml/badge.svg)](https://github.com/Ezark213/blog-prompt/actions/workflows/automated_posting.yml)
-[![Quality Check](https://github.com/Ezark213/blog-prompt/actions/workflows/quality_check.yml/badge.svg)](https://github.com/Ezark213/blog-prompt/actions/workflows/quality_check.yml)
+**完全無料**でプロ品質のWordPress記事を自動生成
+
 [![Node.js Version](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen.svg)](https://nodejs.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-## 🌟 概要
+## 🚀 システム概要
 
-https://ezark-tax-accounting.com/ の完全自動化運営システムです。GPTリサーチ結果を元に、記事の生成からWordPress投稿まで完全自動化します。
+OpenAI API不要！手動ディープリサーチ + Claude Codeの組み合わせで、高品質なWordPress記事を完全無料で生成できます。
 
-## 🚀 主要機能
+### 🌟 主な特徴
 
-- **📋 GPTリサーチ解析**: JSON/Markdownファイルの自動構造化
-- **📝 記事自動生成**: WordPress完全対応HTML記事生成
-- **📊 図表自動作成**: 記事内容連動モバイル最適化図表
-- **📤 下書き自動保存**: WordPress下書きとして5記事同時保存
-- **🔍 品質保証**: ESLint、テスト、セキュリティ監査
-- **⚡ GitHub Actions**: CI/CDパイプライン完備
-- **🎯 キーワード戦略**: 統合プロンプトで5記事構成一括生成
-- **📊 競合分析**: SEO戦略立案支援ツール完備
+- ✅ **完全無料** - OpenAI API等の有料サービス一切不要
+- ✅ **手動リサーチ品質** - 深い調査に基づく高品質コンテンツ
+- ✅ **GitHub内プロンプト** - 専用プロンプトの自動活用
+- ✅ **Claude Code品質** - 最高レベルの記事生成能力
+- ✅ **完全自動化** - 図表・SEO・スキーマすべて自動
+- ✅ **柔軟性** - txtファイルの自由な形式に対応
 
-## 📂 システム構成
+## 🎯 新しいワークフロー
 
+### 1. 手動ディープリサーチ実施
+自分でキーワードについて深く調査し、情報を収集
+
+### 2. txtファイルに保存
 ```
-blog-automation/
-├── src/
-│   ├── core/              # コアエンジン
-│   │   ├── research_parser.js      # リサーチ解析
-│   │   ├── content_generator.js    # コンテンツ生成
-│   │   └── wordpress_client.js     # WordPress API
-│   ├── utils/             # ユーティリティ
-│   └── index.js           # メインエントリーポイント
-├── .github/workflows/     # GitHub Actions
-│   ├── automated_posting.yml       # 自動投稿
-│   └── quality_check.yml          # 品質チェック
-├── inputs/                # 入力データ
-│   └── research_results/
-│       ├── pending/       # 処理待ちファイル
-│       └── completed/     # 処理完了ファイル
-├── outputs/               # 出力データ
-│   ├── parsed_research/   # 構造化リサーチ
-│   ├── generated_content/ # 生成コンテンツ
-│   └── published_posts/   # 公開記事（下書き保存）
-├── prompts/               # プロンプトテンプレート
-└── deep_research_prompt.md # ディープリサーチ統合プロンプト
+inputs/manual_research/your_research.txt
 ```
 
-## ⚙️ ファイル詳細
-
-### 🔧 コアエンジン
-
-#### 1. リサーチ解析エンジン (`src/core/research_parser.js`)
-- **機能**: GPTディープリサーチ結果（JSON/MD）の構造化
-- **処理**: キーワード抽出、記事構成生成、SEO戦略策定
-- **出力**: 構造化データ、メタデータ、記事設計情報
-
-#### 2. コンテンツ生成エンジン (`src/core/content_generator.js`)
-- **機能**: 構造化データからWordPress記事生成
-- **処理**: OpenAI API連携、SEO最適化、スキーマ生成
-- **出力**: WordPress完全対応HTML、メタデータ
-
-#### 3. WordPress APIクライアント (`src/core/wordpress_client.js`)
-- **機能**: WordPress REST API経由の自動投稿
-- **処理**: 記事投稿、カテゴリ・タグ管理、Yoast SEO設定
-- **出力**: 公開記事、投稿レポート
-
-### 📋 プロンプトテンプレート
-
-#### 1. WordPress記事作成 (`updated_wordpress_guide.md`)
-- **用途**: Swellテーマ対応記事生成
-- **特徴**: SEO最適化、モバイルファースト、会計専門
-
-#### 2. 図表生成 (`# 会計・税務記事用モバイル最適化図表生成プロンプト【記事内容連動版】.md`)
-- **用途**: 記事連動視覚化コンテンツ
-- **特徴**: JavaScript不使用、CSS分離、UX最優先
-
-#### 3. Schema.org構造化データ (`schema_markup_generator.md`)
-- **用途**: SEO強化のための構造化データ自動生成
-- **特徴**: 記事解析、スキーマ判定、WordPress対応
-
-## 🆕 新機能：複数記事対応＋下書き保存
-
-### 📝 5記事同時処理
-- **入力**: 1つのMarkdownファイルに5つの記事候補（H1見出し区切り）
-- **出力**: WordPressに5つの記事を下書きとして自動保存
-- **自動解析**: 各記事のキーワード・構成を個別に解析・構造化
-
-### 🎯 ディープリサーチ統合プロンプト
-**ファイル**: `deep_research_prompt.md`
-
-40年経験のSEOコンサルタントとして、以下を一括実行：
-- **キーワード選定**: 月間200-2,000回、競合分析付き
-- **記事構成作成**: 5記事の完全な構成（4,000-6,000文字）
-- **競合分析**: 上位サイト分析＋差別化戦略
-- **マネタイズ戦略**: CTA配置＋収益化導線設計
-
-### 🚀 使用フロー
+### 3. Claude用プロンプト生成
 ```bash
-1. ChatGPTにディープリサーチプロンプトを実行
-   ↓
-2. 出力された5記事構成をMarkdownで保存
-   ↓  
-3. inputs/research_results/pending/ に配置
-   ↓
-4. npm start で WordPress下書き一括生成
+npm run claude your_research.txt
 ```
 
-## 🛠️ セットアップ
+### 4. Claude Codeで記事生成
+生成されたプロンプトをClaude Codeに貼り付け → 自動で高品質記事が完成！
 
-### 1. 環境構築
+## 📁 新しいプロジェクト構造
+
+```
+blog-prompt/
+├── docs/
+│   ├── prompts/                      # AIプロンプト集
+│   │   ├── wordpress_article_generator.md
+│   │   ├── chart_generator.md
+│   │   └── schema_markup_generator.md
+│   ├── SETUP.md                     # セットアップガイド
+│   └── CHANGELOG.md                 # 変更履歴
+├── src/
+│   ├── claude_article_generator.js  # Claude Code連携システム
+│   ├── index.js                     # 旧システム（互換性）
+│   └── core/                        # コアモジュール
+├── inputs/
+│   └── manual_research/             # 手動リサーチtxtファイル
+├── outputs/
+│   └── claude_articles/             # Claude用プロンプト・データ
+├── examples/
+│   └── research_template.txt        # リサーチテンプレート
+├── legacy/                          # 旧システムファイル
+└── MANUAL_WORKFLOW.md              # 詳細ワークフロー説明
+```
+
+## ⚡ クイックスタート
+
+### 1. 準備（環境変数設定不要！）
 
 ```bash
 # リポジトリクローン
@@ -118,242 +73,250 @@ cd blog-prompt
 # 依存関係インストール
 npm install
 
-# 環境変数設定
-cp .env.example .env
-# .env ファイルを編集して必要な値を設定
+# サンプルファイル作成
+npm run claude-sample
 ```
 
-### 2. 必須環境変数
+### 2. 手動リサーチの実施
 
-```env
-# WordPress API
-WORDPRESS_API_URL=https://ezark-tax-accounting.com/wp-json/wp/v2
-WORDPRESS_USERNAME=your_username
-WORDPRESS_APP_PASSWORD=your_app_password
+お好きな方法でキーワードについて調査：
+- Google検索
+- 専門サイト調査
+- 競合分析
+- 実務経験の整理
 
-# OpenAI API
-OPENAI_API_KEY=sk-your_openai_api_key
+### 3. txtファイルに保存
 
-# サイト設定
-SITE_URL=https://ezark-tax-accounting.com
+```txt
+# inputs/manual_research/freee_advanced.txt
+
+freee会計ソフトの高度な活用法について
+
+■ 自動仕訳ルールの設定
+- 銀行連携での自動振り分け
+- 定期取引の自動化
+- 仕訳辞書機能の活用
+
+■ 効率的な経理業務
+- 月次決算の自動化
+- レポート作成の効率化
+- 税務申告書の自動作成
+
+目標文字数: 5500文字で実務重視
 ```
 
-### 3. WordPressアプリケーションパスワード作成
-
-1. WordPress管理画面 → ユーザー → プロフィール
-2. 「アプリケーションパスワード」セクションで新規作成
-3. 生成されたパスワードを `WORDPRESS_APP_PASSWORD` に設定
-
-## 🚀 使用方法
-
-### 手動実行
+### 4. Claude Code用プロンプト生成
 
 ```bash
-# 完全自動化パイプライン
+# Claude用プロンプト生成
+npm run claude freee_advanced.txt
+
+# 生成されたプロンプトを確認
+cat outputs/claude_articles/freee_advanced_claude_prompt.md
+```
+
+### 5. Claude Codeで記事生成
+
+1. 生成されたプロンプトをコピー
+2. Claude Codeに貼り付け
+3. Claude CodeがGitHub内プロンプトを自動使用
+4. 高品質なWordPress記事が自動生成！
+
+## 🎨 利用可能なコマンド
+
+```bash
+# ヘルプ表示
+npm run claude-help
+
+# 利用可能ファイル一覧
+npm run claude-list
+
+# サンプルファイル作成
+npm run claude-sample
+
+# Claude用プロンプト生成
+npm run claude <txtファイル名>
+
+# テスト実行
+npm run claude sample_freee_research.txt
+```
+
+## 🔧 GitHub内プロンプトの活用
+
+### 自動使用されるプロンプト
+
+1. **docs/prompts/wordpress_article_generator.md** - WordPress記事生成
+2. **docs/prompts/chart_generator.md** - 図表生成
+3. **docs/prompts/schema_markup_generator.md** - スキーママークアップ生成
+
+### プロンプトの更新
+
+GitHub内のプロンプトファイルを編集するだけで、次回生成時から自動適用！
+
+## 📝 実際の使用例
+
+```bash
+# 1. サンプル作成
+npm run claude-sample
+
+# 2. サンプルでテスト
+npm run claude sample_freee_research.txt
+
+# 3. 生成されたプロンプトを確認
+ls outputs/claude_articles/
+
+# 4. Claude Codeに貼り付けて記事生成完了！
+```
+
+## 🎯 生成される記事の品質
+
+Claude Codeが生成する記事には以下が含まれます：
+
+### WordPress完全対応
+- `<!-- wp:paragraph -->` ブロック形式
+- Swellテーマ吹き出し機能
+- FAQブロック・ステップブロック
+
+### SEO最適化
+- 適切なH2・H3見出し構造
+- メタディスクリプション
+- URLスラッグ最適化
+- スキーママークアップ（JSON-LD）
+
+### 視覚的コンテンツ
+- 記事内容連動の図表
+- モバイル最適化デザイン
+- レスポンシブ対応
+
+### キャラクター会話
+- ゆーた（実務家・関西弁）
+- ぜいむたん（初心者代表）
+
+## 📊 新旧システム比較
+
+| 項目 | 旧システム | 新システム |
+|------|------------|------------|
+| **費用** | OpenAI API必要 | **完全無料** |
+| **品質** | GPT-4レベル | **Claude Code品質** |
+| **設定** | 複雑な環境変数 | **設定不要** |
+| **リサーチ** | 自動（品質に限界） | **手動（高品質）** |
+| **プロンプト** | 固定 | **GitHub連携** |
+| **保守性** | 複雑 | **シンプル** |
+
+## 🔍 ファイル詳細
+
+### 新規追加ファイル
+- `src/claude_article_generator.js` - Claude Code連携システム
+- `src/core/simple_research_parser.js` - txtファイル解析
+- `MANUAL_WORKFLOW.md` - 詳細ワークフロー説明
+
+### プロンプトファイル
+- `docs/prompts/wordpress_article_generator.md` - WordPress記事生成
+- `docs/prompts/chart_generator.md` - 図表生成  
+- `docs/prompts/schema_markup_generator.md` - スキーマ生成
+- `docs/prompts/deep_research.md` - ディープリサーチ用（旧システム）
+
+## 🎉 利点まとめ
+
+1. **経済性** - API費用が一切不要
+2. **品質** - Claude Codeの高い生成能力
+3. **柔軟性** - 手動リサーチで深い内容
+4. **保守性** - GitHubでプロンプト管理
+5. **拡張性** - プロンプトの簡単カスタマイズ
+6. **安全性** - 外部API依存なし
+
+## 🛠️ 従来システムとの互換性
+
+旧システムのファイルも残されており、必要に応じて使用可能：
+
+```bash
+# 従来の完全自動化システム（OpenAI API使用）
 npm start
 
-# 個別実行
-npm run parse-research     # リサーチ解析のみ
-npm run generate-content   # コンテンツ生成のみ
-npm run publish           # WordPress投稿のみ
-
-# テストモード（実際には投稿しない）
-DRY_RUN=true npm start
-
-# 接続テスト
-node src/index.js test-connection
-```
-
-### GitHub Actions自動実行
-
-1. **リサーチファイル配置**
-   ```bash
-   # pendingディレクトリにファイル配置
-   inputs/research_results/pending/sample.json
-   ```
-
-2. **自動実行トリガー**
-   - ファイル追加時の自動実行
-   - 毎日午前2時の定時実行
-   - 手動実行（GitHub Actions画面から）
-
-3. **実行監視**
-   - GitHub Actions タブで進行状況確認
-   - ログとレポートの自動生成
-
-## 🔄 自動化ワークフロー
-
-```mermaid
-graph TD
-    A[GPTリサーチ実行] --> B[research_results/pending/*.json]
-    B --> C[GitHub Actions トリガー]
-    C --> D[リサーチ解析]
-    D --> E[コンテンツ生成]
-    E --> F[図表生成]
-    F --> G[WordPress投稿]
-    G --> H[完了通知]
-    
-    B --> I[手動実行]
-    I --> J[npm start]
-    J --> D
-```
-
-### 処理フロー詳細
-
-1. **📋 リサーチ解析** (research_parser.js)
-   - GPT結果ファイル読み込み
-   - キーワード・構成の構造化
-   - SEO戦略生成
-
-2. **📝 コンテンツ生成** (content_generator.js)
-   - OpenAI API でWordPress記事生成
-   - SEO最適化タイトル・メタ生成
-   - Schema.org構造化データ生成
-
-3. **📊 図表生成** (image_generator.js)
-   - 記事内容解析
-   - モバイル最適化HTML/CSS生成
-   - 埋め込み位置提案
-
-4. **📤 WordPress投稿** (wordpress_client.js)
-   - REST API経由投稿
-   - カテゴリ・タグ自動設定
-   - Yoast SEO設定
-
-## ✨ 特徴
-
-### 🚀 完全自動化
-- **ゼロタッチ運用**: ファイル配置で全自動実行
-- **24時間稼働**: GitHub Actions で夜間処理
-- **エラー回復**: 自動リトライとログ出力
-
-### 🎯 SEO特化
-- **キーワード最適化**: 密度調整と配置戦略
-- **構造化データ**: Schema.org自動生成
-- **メタデータ**: タイトル・説明文最適化
-
-### 📱 モバイルファースト
-- **レスポンシブ図表**: CSS Grid/Flexbox活用
-- **高速読み込み**: 最適化HTML出力
-- **UX重視**: タップ領域・文字サイズ配慮
-
-### 💼 会計・税務特化
-- **専門用語対応**: 業界知識反映
-- **実務家視点**: ゆーた（関西弁）キャラクター
-- **初心者配慮**: ぜいむたんとの会話形式
-
-### 🔧 技術的優位性
-- **WordPress完全対応**: Swellテーマ最適化
-- **API活用**: OpenAI GPT-4 + WordPress REST
-- **品質保証**: ESLint、テスト、セキュリティ監査
-- **拡張性**: モジュール設計でカスタマイズ容易
-
-## 📊 期待効果
-
-### 🕐 効率性向上
-- **作業時間**: 2-3時間 → 5-10分 (95%削減)
-- **記事投稿**: 週1本 → 週5本 (500%向上)
-- **品質安定**: プロンプト標準化で一貫性確保
-
-### 💰 コスト削減
-- **人件費削減**: 月40時間 → 3時間
-- **外注不要**: 全工程内製化
-- **スケーラビリティ**: 記事数増加時の線形コスト回避
-
-### 📈 SEO効果
-- **検索順位向上**: 構造化データとキーワード最適化
-- **トラフィック増加**: 継続的なコンテンツ投稿
-- **エンゲージメント**: モバイル最適化で滞在時間向上
-
-## 🛡️ セキュリティ・品質保証
-
-- **🔒 セキュリティ**: アプリケーションパスワード使用
-- **🧪 自動テスト**: ユニット・結合テスト完備
-- **🔍 品質チェック**: ESLint、Prettier自動適用
-- **📊 監査**: 依存関係セキュリティスキャン
-- **📋 ログ管理**: 詳細実行ログ保存
-
-## 🆘 トラブルシューティング
-
-### よくある問題
-
-**WordPress接続エラー**
-```bash
-# 接続テスト実行
-node src/index.js test-connection
-
-# アプリケーションパスワード再生成
-# WordPress管理画面で確認
-```
-
-**OpenAI APIエラー**
-```bash
-# APIキー確認
-echo $OPENAI_API_KEY
-
-# 使用量確認（OpenAI Dashboardで）
-# レート制限の可能性
-```
-
-**GitHub Actions失敗**
-```bash
-# Secrets設定確認
-# Repository → Settings → Secrets and variables → Actions
+# 新しいClaude Codeシステム（無料）
+npm run claude <txtファイル名>
 ```
 
 ## 📖 詳細ドキュメント
 
-- [🚀 クイックスタートガイド](quick-start-guide.md)
-- [⚙️ 自動化ワークフロー詳細](automation-workflow.md)
+- [🚀 手動ワークフロー詳細](MANUAL_WORKFLOW.md)
+- [⚙️ セットアップガイド](docs/SETUP.md)
+- [📝 変更履歴](docs/CHANGELOG.md)
+- [🤝 コントリビューション](CONTRIBUTING.md)
 - [🔧 API仕様書](docs/api_documentation.md)
-- [🧪 テストガイド](docs/testing_guide.md)
+- [⚙️ 自動化ワークフロー詳細](docs/automation-workflow.md)
 
-## 🤝 コントリビューション
+## 🔄 実際の運用フロー
 
-1. Fork this repository
-2. Create feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit changes (`git commit -m 'Add amazing feature'`)
-4. Push to branch (`git push origin feature/amazing-feature`)
-5. Open Pull Request
+```mermaid
+graph TD
+    A[手動ディープリサーチ] --> B[txtファイル保存]
+    B --> C[Claude用プロンプト生成]
+    C --> D[Claude Codeに貼り付け]
+    D --> E[GitHub内プロンプト自動読み込み]
+    E --> F[WordPress記事生成]
+    F --> G[図表自動生成・埋め込み]
+    G --> H[SEO最適化・スキーマ生成]
+    H --> I[WordPress投稿]
+```
+
+## 🔍 トラブルシューティング
+
+### よくある問題
+
+```bash
+# ファイルが見つからない場合
+npm run claude-list
+
+# サンプルで動作確認
+npm run claude-sample
+npm run claude sample_freee_research.txt
+
+# プロンプトファイルが正しく生成されているか確認
+ls outputs/claude_articles/
+```
 
 ## 📄 ライセンス
 
-このプロジェクトは [MIT License](LICENSE) の下で公開されています。
+MIT License - 商用利用・改変・配布自由
 
-## 📞 サポート
+## 🆘 サポート
 
-- **🐛 バグレポート**: [GitHub Issues](https://github.com/Ezark213/blog-prompt/issues)
-- **💡 機能要望**: [GitHub Discussions](https://github.com/Ezark213/blog-prompt/discussions)
-- **📧 お問い合わせ**: [EZARK税務・会計](https://ezark-tax-accounting.com/contact/)
+- **Issues**: [GitHub Issues](https://github.com/Ezark213/blog-prompt/issues)
+- **詳細ワークフロー**: [MANUAL_WORKFLOW.md](MANUAL_WORKFLOW.md)
+- **お問い合わせ**: [EZARK税務・会計](https://ezark-tax-accounting.com/contact/)
 
 ## 📈 統計情報
 
 ![GitHub stars](https://img.shields.io/github/stars/Ezark213/blog-prompt?style=social)
 ![GitHub forks](https://img.shields.io/github/forks/Ezark213/blog-prompt?style=social)
-![GitHub watchers](https://img.shields.io/github/watchers/Ezark213/blog-prompt?style=social)
 
 ---
 
-**🚀 今すぐ始めましょう！**
+## 🚀 今すぐ始めましょう！
 
 ```bash
 git clone https://github.com/Ezark213/blog-prompt.git
 cd blog-prompt
 npm install
-cp .env.example .env
-# .env を編集後
-npm start
+npm run claude-sample
+npm run claude sample_freee_research.txt
+# 生成されたプロンプトをClaude Codeに貼り付け！
 ```
 
 ## 📝 更新履歴
 
-### v1.0.0 (2025-08-27) 🎉
-- ✨ **初回リリース**: 完全自動化システム
-- 🚀 **GitHub Actions**: CI/CD パイプライン完備
-- 📝 **WordPress API**: REST API完全対応
-- 🤖 **AI統合**: OpenAI GPT-4統合
-- 📊 **品質保証**: 自動テスト・監査
-- 📱 **モバイル対応**: レスポンシブ設計
-- 🔒 **セキュリティ**: 包括的セキュリティ機能
-- 📚 **ドキュメント**: 完全ドキュメント化
-- 🛠️ **ツール**: 開発・運用ツール完備
+### v2.0.0 (2025-09-03) 🎉
+- ✨ **Claude Code連携**: 完全無料システムに移行
+- 🚫 **OpenAI API廃止**: API費用完全削除
+- 📝 **手動リサーチ重視**: 高品質コンテンツ指向
+- 🔧 **GitHub連携強化**: プロンプト自動活用
+- 📱 **モバイル最適化**: 図表・レスポンシブ対応
+- 🛠️ **シンプル設計**: 環境変数設定不要
+
+### v1.0.0 (2025-08-27)
+- 🚀 **初回リリース**: OpenAI API自動化システム
+
+---
+
+**EZARK税務・会計** - 手動リサーチ×Claude Codeで最高品質の記事を完全無料生成

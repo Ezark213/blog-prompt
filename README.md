@@ -1,40 +1,49 @@
-# 手動リサーチ → Claude Code記事生成システム
+# 🤖 GPTリサーチ → Claude Code → WordPress自動投稿システム
 
-**完全無料**でプロ品質のWordPress記事を自動生成
+**完全自動化**で高品質なWordPress記事を効率生成！複数記事構成対応
 
 [![Node.js Version](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen.svg)](https://nodejs.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![WordPress](https://img.shields.io/badge/WordPress-Compatible-21759B.svg)](https://wordpress.org/)
+[![Claude Code](https://img.shields.io/badge/Claude%20Code-Powered-FF6B35.svg)](https://claude.ai/code)
 
 ## 🚀 システム概要
 
-OpenAI API不要！手動ディープリサーチ + Claude Codeの組み合わせで、高品質なWordPress記事を完全無料で生成できます。
+GPTディープリサーチ + Claude Code + WordPress自動投稿の完全ワークフロー！
+複数記事構成にも対応し、1回のリサーチで複数の下書き記事を自動生成できます。
 
 ### 🌟 主な特徴
 
-- ✅ **完全無料** - OpenAI API等の有料サービス一切不要
-- ✅ **手動リサーチ品質** - 深い調査に基づく高品質コンテンツ
-- ✅ **GitHub内プロンプト** - 専用プロンプトの自動活用
-- ✅ **Claude Code品質** - 最高レベルの記事生成能力
-- ✅ **完全自動化** - 図表・SEO・スキーマすべて自動
-- ✅ **柔軟性** - txtファイルの自由な形式に対応
+- 🤖 **GPT→Claude連携** - GPTリサーチ結果をClaude Codeで高品質記事化
+- 📚 **複数記事構成対応** - 1回のリサーチで複数記事を自動生成・保存
+- 🔗 **完全自動化** - txtファイル保存からWordPress下書き保存まで全自動
+- 💰 **コスト効率** - OpenAI API不要でClaude Codeの力を最大活用
+- 🎯 **専用プロンプト** - GitHub内の最適化された3つのプロンプトを自動使用
+- 🛡️ **安全設計** - 全て下書き保存で誤公開防止
 
-## 🎯 新しいワークフロー
+## 🎯 完全自動化ワークフロー
 
-### 1. 手動ディープリサーチ実施
-自分でキーワードについて深く調査し、情報を収集
+### 1. GPTでディープリサーチ実施
+GPTに詳細なリサーチプロンプトを送信し、包括的な調査結果を取得
 
-### 2. txtファイルに保存
-```
+### 2. リサーチ結果をtxtファイルに保存
+```bash
 inputs/manual_research/your_research.txt
 ```
+GPTの回答をそのままコピペして保存
 
-### 3. Claude用プロンプト生成
+### 3. Claude用プロンプト自動生成
 ```bash
 npm run claude your_research.txt
 ```
+3つの専用プロンプト（記事生成・図表・スキーマ）を自動統合
 
-### 4. Claude Codeで記事生成
-生成されたプロンプトをClaude Codeに貼り付け → 自動で高品質記事が完成！
+### 4. Claude Codeで記事生成＆WordPress自動保存
+```bash
+# Claude Codeで記事生成後
+node src/wordpress_auto_post.js
+```
+複数記事構成も自動検出→個別下書き保存
 
 ## 📁 新しいプロジェクト構造
 

@@ -18,6 +18,7 @@
     "claude-list": "node src/claude_article_generator.js list",
     "claude-sample": "node src/claude_article_generator.js sample",
     "wordpress-post": "node src/wordpress_auto_post.js",
+    "wordpress-upload-md": "node src/upload_md_articles.js",
     "multi-post": "node src/wordpress_auto_post.js",
     "setup-wordpress": "echo 'WordPress自動投稿の設定方法：' && cat SETUP_WORDPRESS.md"
   },

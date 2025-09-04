@@ -5,12 +5,21 @@ on:
     inputs:
       research_file:
         description: 'リサーチファイル名 (例: sample_research.txt)'
-        required: true
+        required: false
         type: string
+      upload_type:
+        description: 'アップロードタイプ (json: JSON記事, md: Markdown記事)'
+        required: false
+        default: 'json'
+        type: choice
+        options:
+        - json
+        - md
   push:
     paths:
       - 'outputs/claude_articles/*.json'
       - 'outputs/generated_articles/*.json'
+      - 'outputs/*.md'
 
 jobs:
   wordpress_post:
@@ -35,14 +44,25 @@ jobs:
         echo "🚀 Claude用プロンプト生成: ${{ github.event.inputs.research_file }}"
         node src/claude_article_generator.js "${{ github.event.inputs.research_file }}"
       
-    - name: Auto post to WordPress
+    - name: Auto post to WordPress (JSON)
+      if: github.event.inputs.upload_type == 'json' || github.event.inputs.upload_type == ''
       env:
         WORDPRESS_API_URL: ${{ secrets.WORDPRESS_API_URL }}
         WORDPRESS_USERNAME: ${{ secrets.WORDPRESS_USERNAME }}
         WORDPRESS_APP_PASSWORD: ${{ secrets.WORDPRESS_APP_PASSWORD }}
       run: |
-        echo "📤 WordPress自動投稿開始..."
+        echo "📤 WordPress自動投稿開始 (JSON記事)..."
         node src/wordpress_auto_post.js
+
+    - name: Auto post to WordPress (Markdown)
+      if: github.event.inputs.upload_type == 'md'
+      env:
+        WORDPRESS_API_URL: ${{ secrets.WORDPRESS_API_URL }}
+        WORDPRESS_USERNAME: ${{ secrets.WORDPRESS_USERNAME }}
+        WORDPRESS_APP_PASSWORD: ${{ secrets.WORDPRESS_APP_PASSWORD }}
+      run: |
+        echo "📤 WordPress自動投稿開始 (Markdown記事)..."
+        node src/upload_md_articles.js
         
     - name: Commit and push if files changed
       run: |

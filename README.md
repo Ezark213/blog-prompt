@@ -40,10 +40,24 @@ npm run claude your_research.txt
 
 ### 4. Claude Codeで記事生成＆WordPress自動保存
 ```bash
-# Claude Codeで記事生成後
+# JSON記事の場合（従来の方法）
 node src/wordpress_auto_post.js
+
+# Markdown記事の場合（新機能）
+npm run wordpress-upload-md
 ```
 複数記事構成も自動検出→個別下書き保存
+
+### 🆕 新機能：Markdownファイル直接アップロード
+キーワード分析結果からMarkdown形式で記事を生成し、直接WordPressにアップロード可能：
+
+```bash
+# 1. キーワード分析結果を元にMarkdown記事を作成
+# (outputsフォルダに.mdファイルを配置)
+
+# 2. Markdown記事を一括アップロード
+npm run wordpress-upload-md
+```
 
 ## 📁 新しいプロジェクト構造
 

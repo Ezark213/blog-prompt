@@ -1,0 +1,88 @@
+name: Complete Article Workflow
+
+on:
+  workflow_dispatch:
+    inputs:
+      workflow_type:
+        description: 'ワークフロータイプ'
+        required: true
+        type: choice
+        options:
+          - 'keyword-analysis-to-wordpress'
+          - 'markdown-to-wordpress-only'
+      keyword_analysis_file:
+        description: 'キーワード分析ファイル名 (デスクトップの【キーワード分析結果】.txt など)'
+        required: false
+        type: string
+      auto_upload:
+        description: '記事作成後、自動的にWordPressにアップロードするか'
+        required: false
+        default: true
+        type: boolean
+
+jobs:
+  process-articles:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm install
+
+    - name: Generate articles from keyword analysis
+      if: github.event.inputs.workflow_type == 'keyword-analysis-to-wordpress'
+      run: |
+        echo "🔍 キーワード分析から記事生成を開始..."
+        echo "この段階では手動でキーワード分析結果をアップロードし、Claude Codeで記事を生成してください"
+        echo "生成された.mdファイルをoutputsフォルダに配置してください"
+
+    - name: List generated markdown files
+      run: |
+        echo "📄 生成されたMarkdownファイル:"
+        ls -la outputs/*.md || echo "Markdownファイルが見つかりません"
+
+    - name: Upload Markdown articles to WordPress
+      if: github.event.inputs.auto_upload == 'true'
+      env:
+        WORDPRESS_API_URL: ${{ secrets.WORDPRESS_API_URL }}
+        WORDPRESS_USERNAME: ${{ secrets.WORDPRESS_USERNAME }}
+        WORDPRESS_APP_PASSWORD: ${{ secrets.WORDPRESS_APP_PASSWORD }}
+      run: |
+        echo "📤 Markdown記事をWordPressにアップロード..."
+        node src/upload_md_articles.js
+
+    - name: Generate summary report
+      run: |
+        echo "📊 ワークフロー完了サマリー"
+        echo "========================"
+        echo "処理タイプ: ${{ github.event.inputs.workflow_type }}"
+        echo "自動アップロード: ${{ github.event.inputs.auto_upload }}"
+        echo "処理日時: $(date)"
+        echo "========================"
+
+    - name: Commit and push changes
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add -A
+        git diff --staged --quiet || git commit -m "Auto: Complete article workflow completed 🤖"
+        git push
+
+  notify-completion:
+    needs: process-articles
+    runs-on: ubuntu-latest
+    if: always()
+    
+    steps:
+    - name: Workflow completion notification
+      run: |
+        echo "🎉 Complete Article Workflow が完了しました"
+        echo "結果: ${{ needs.process-articles.result }}"

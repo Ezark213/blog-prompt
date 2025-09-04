@@ -10,6 +10,9 @@ const path = require('path');
 const WordPressClient = require('./core/wordpress_client');
 const marked = require('marked');
 
+// 環境変数を読み込み
+require('dotenv').config();
+
 class MarkdownUploader {
   constructor() {
     this.client = new WordPressClient();

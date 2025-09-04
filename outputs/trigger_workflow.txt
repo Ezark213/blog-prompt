@@ -1,0 +1,6 @@
+This file triggers the WordPress auto-post workflow
+Generated on: 2025-09-04
+Articles ready for upload:
+- 01_invoice_kaikeisoft_osusume.md
+- 02_it_hojo_kaikeisoft.md  
+- 03_jiriki_kessan.md

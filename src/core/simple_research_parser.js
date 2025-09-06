@@ -108,44 +108,135 @@ class SimpleResearchParser {
   }
 
   /**
-   * 見出し構造を推測生成
+   * 見出し構造を詳細に抽出・生成
    */
   extractHeadings(content) {
     const headings = [];
     
     // コンテンツから見出しらしいものを抽出
     const lines = content.split('\n');
-    lines.forEach(line => {
+    let currentSection = null;
+    
+    lines.forEach((line, index) => {
       const trimmed = line.trim();
       
-      // 見出しパターン（■、●、1.、・など）
-      if (/^[■●▲◆]\s*/.test(trimmed) || /^\d+\.\s*/.test(trimmed)) {
-        headings.push({
-          level: 2,
-          text: trimmed.replace(/^[■●▲◆\d\.・\s]+/, '').trim()
-        });
+      // メインセクション見出しパターン（■、●、▲、◆など）
+      if (/^[■●▲◆]\s*/.test(trimmed)) {
+        const heading = trimmed.replace(/^[■●▲◆]\s*/, '').trim();
+        if (heading) {
+          currentSection = {
+            level: 2,
+            text: heading,
+            subHeadings: []
+          };
+          headings.push(currentSection);
+        }
+      }
+      // 番号付きセクション（1.、2.など）
+      else if (/^\d+\.\s*/.test(trimmed)) {
+        const heading = trimmed.replace(/^\d+\.\s*/, '').trim();
+        if (heading) {
+          currentSection = {
+            level: 2,
+            text: heading,
+            subHeadings: []
+          };
+          headings.push(currentSection);
+        }
+      }
+      // サブセクション（-, ・など）
+      else if (/^[-・]\s*/.test(trimmed) && currentSection) {
+        const subHeading = trimmed.replace(/^[-・]\s*/, '').trim();
+        if (subHeading && subHeading.length > 5) {
+          currentSection.subHeadings.push({
+            level: 3,
+            text: subHeading
+          });
+        }
       }
     });
     
-    // 見出しが見つからない場合はデフォルト構造を作成
+    // 見出しが見つからない場合はキーワードベースでデフォルト構造を作成
     if (headings.length === 0) {
-      const defaultHeadings = [
-        '基本的な概要と特徴',
-        '初期設定・導入方法', 
-        '具体的な使い方・操作手順',
-        'よくある質問と解決方法',
-        'まとめと活用のポイント'
-      ];
+      const keyword = this.extractKeywordFromContent(content);
+      const defaultHeadings = this.generateDefaultHeadingStructure(keyword);
       
       defaultHeadings.forEach(heading => {
         headings.push({
           level: 2,
-          text: heading
+          text: heading,
+          subHeadings: []
         });
       });
     }
     
-    return headings.slice(0, 6); // 最大6個まで
+    // 見出し構造をフラット化（H2とH3を別々に返す）
+    const flatHeadings = [];
+    headings.forEach(h2 => {
+      flatHeadings.push(h2);
+      h2.subHeadings.forEach(h3 => {
+        flatHeadings.push(h3);
+      });
+    });
+    
+    return flatHeadings.slice(0, 10); // 最大10個まで
+  }
+
+  /**
+   * コンテンツからメインキーワードを抽出
+   */
+  extractKeywordFromContent(content) {
+    const keywords = ['freee', 'マネーフォワード', '会計ソフト', '確定申告', 'インボイス', '税務', '経理'];
+    
+    for (const keyword of keywords) {
+      if (content.includes(keyword)) {
+        return keyword;
+      }
+    }
+    
+    return '会計ソフト';
+  }
+
+  /**
+   * キーワードに基づくデフォルト見出し構造生成
+   */
+  generateDefaultHeadingStructure(keyword) {
+    const structures = {
+      'freee': [
+        `${keyword}とは？基本機能と特徴を詳しく解説`,
+        `${keyword}の導入・初期設定の完全手順`,
+        '実際の操作方法と使い方のコツ',
+        '料金プランと機能比較',
+        'よくあるトラブルと解決方法',
+        `${keyword}活用で経理効率化を実現する方法`
+      ],
+      'マネーフォワード': [
+        `${keyword}の全機能と他社との違い`,
+        '導入から運用開始までの詳細ガイド',
+        '日常業務での効率的な活用法',
+        '連携機能とAPI活用のメリット',
+        'セキュリティと運用上の注意点',
+        '成功事例と実務での活用ポイント'
+      ],
+      '会計ソフト': [
+        `${keyword}選びの重要ポイントと比較基準`,
+        '主要ソフトの機能比較と選び方',
+        '導入時の注意点と準備事項',
+        '運用開始後の効率的な使い方',
+        'トラブル対応とメンテナンス方法',
+        '将来性と拡張機能の活用法'
+      ],
+      default: [
+        `${keyword}の基本概要と重要性`,
+        '具体的な導入手順と初期設定',
+        '日常的な運用方法と操作のコツ',
+        'よくある問題と解決策',
+        '上級者向けの活用テクニック',
+        'まとめと今後の展望'
+      ]
+    };
+    
+    return structures[keyword] || structures.default;
   }
 
   /**

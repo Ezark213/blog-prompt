@@ -89,13 +89,66 @@ class SEOOptimizer {
       "@context": "https://schema.org",
       "@type": "BlogPosting",
       "headline": researchData.title,
-      "description": articleData.metaDescription,
+      "description": articleData.metaDescription || `${researchData.mainKeyword}について詳しく解説した実務重視の記事です。`,
       "datePublished": new Date().toISOString(),
+      "dateModified": new Date().toISOString(),
+      "url": `https://ezark-tax-accounting.com/${articleData.slug || 'accounting-guide'}/`,
+      "image": {
+        "@type": "ImageObject",
+        "url": "https://ezark-tax-accounting.com/wp-content/uploads/2024/default-article-image.jpg",
+        "width": 1200,
+        "height": 630
+      },
       "author": {
         "@type": "Person",
-        "name": "ゆーた（会計士）"
+        "name": "ゆーた（会計士）",
+        "description": "freee・マネーフォワード等のクラウド会計ソフト導入支援を専門とする実務家会計士。税務・会計の複雑な問題を初心者にもわかりやすく解説。",
+        "url": "https://ezark-tax-accounting.com/author/yuta/",
+        "sameAs": [
+          "https://twitter.com/ezark_accounting",
+          "https://linkedin.com/in/ezark-yuta"
+        ]
+      },
+      "publisher": {
+        "@type": "Organization",
+        "name": "EZARK税務・会計",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://ezark-tax-accounting.com/wp-content/uploads/2024/logo.png",
+          "width": 400,
+          "height": 60
+        }
+      },
+      "mainEntityOfPage": {
+        "@type": "WebPage",
+        "@id": `https://ezark-tax-accounting.com/${articleData.slug || 'accounting-guide'}/`
+      },
+      "keywords": [researchData.mainKeyword, "会計ソフト", "税務", "経理", "確定申告"].join(", "),
+      "articleSection": "税務・会計",
+      "wordCount": articleData.metadata?.wordCount || researchData.targetWordCount,
+      "about": {
+        "@type": "Thing",
+        "name": researchData.mainKeyword,
+        "description": `${researchData.mainKeyword}に関する実務的な情報とノウハウ`
       }
     };
+
+    // FAQがある場合の追加
+    if (researchData.headings && researchData.headings.some(h => h.text.includes('質問'))) {
+      schema.mainEntity = {
+        "@type": "FAQPage",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": `${researchData.mainKeyword}の基本的な使い方は？`,
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": `${researchData.mainKeyword}は初心者でも使いやすいクラウド型のシステムです。基本設定から日常操作まで、段階的に学習することで効率的に活用できます。`
+            }
+          }
+        ]
+      };
+    }
     
     return `<script type="application/ld+json">
 ${JSON.stringify(schema, null, 2)}

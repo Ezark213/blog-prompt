@@ -1,5 +1,6 @@
 const OpenAI = require('openai');
 const PromptManager = require('./prompt_manager');
+const ContentFormatter = require('../utils/content_formatter');
 
 class ArticleProcessor {
   constructor() {
@@ -38,6 +39,7 @@ class ArticleProcessor {
   
   async generateDetailedContent(researchData) {
     const prompt = this.promptManager.buildWordPressPrompt(researchData);
+    const schemaPrompt = this.promptManager.buildSchemaPrompt(researchData);
     
     try {
       console.log('📝 OpenAI APIで記事生成中...');
@@ -47,18 +49,52 @@ class ArticleProcessor {
         messages: [
           {
             role: "system",
-            content: "あなたは40年の経験を持つ税務・会計記事の専門ライターです。指示されたプロンプトに完全に従い、読者に価値を提供する高品質な記事を生成してください。手抜きは一切許されません。"
+            content: `あなたは40年の経験を持つ税務・会計記事の専門ライターです。指示されたプロンプトに完全に従い、読者に価値を提供する高品質な記事を生成してください。
+
+            【重要】記事生成ルール：
+            1. **Markdown記法は一切使用禁止**（##、**、-等は使わない）
+            2. **見出しは必ずHTMLタグ**（<h2>、<h3>等）
+            3. **WordPressブロックエディタ形式必須**：
+               - 段落: <!-- wp:paragraph --><p>内容</p><!-- /wp:paragraph -->
+               - 見出し: <!-- wp:heading {"level":2} --><h2>見出し</h2><!-- /wp:heading -->
+               - リスト: <!-- wp:list --><ul><li>項目</li></ul><!-- /wp:list -->
+               - HTML: <!-- wp:html -->カスタムHTML<!-- /wp:html -->
+            4. **Swellテーマ吹き出しの正しい実装**：
+               <!-- wp:html -->[speech_balloon id="1"]会話内容[/speech_balloon]<!-- /wp:html -->
+            5. **スキーママークアップ必須**：
+               記事の最後に構造化データ（JSON-LD）を必ず含めること
+            
+            手抜きは一切許されません。WordPressブロック形式を完璧に実装してください。`
           },
           {
             role: "user", 
-            content: prompt
+            content: `${prompt}\n\n【追加要求：スキーママークアップ生成】\n${schemaPrompt}`
           }
         ],
         max_tokens: 4000,
         temperature: 0.7
       });
       
-      const content = response.choices[0].message.content;
+      let content = response.choices[0].message.content;
+      
+      // コンテンツ品質チェック
+      const validation = ContentFormatter.validateContent(content);
+      if (!validation.isValid) {
+        console.warn('⚠️ コンテンツ形式の問題が検出されました:', validation.issues);
+        
+        // 自動修正を実行
+        console.log('🔧 自動修正を実行中...');
+        content = ContentFormatter.convertMarkdownToWordPress(content);
+        content = ContentFormatter.fixSpeechBalloons(content);
+        
+        // 修正後の再チェック
+        const revalidation = ContentFormatter.validateContent(content);
+        if (revalidation.isValid) {
+          console.log('✅ コンテンツ形式の修正完了');
+        } else {
+          console.warn('⚠️ 一部の問題が修正できませんでした:', revalidation.issues);
+        }
+      }
       
       // 最低文字数チェック
       const wordCount = this.countWords(content);
